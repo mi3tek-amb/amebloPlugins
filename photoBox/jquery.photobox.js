@@ -2,13 +2,13 @@
  *
  * it make a sticky animation when you choose an image.that is it.
  *
- * The MIT License (MIT) Copyright (c) 2012  copyright:Mistuki Suzuki. 
+ * The MIT License (MIT) Copyright (c) 2012-2014  copyright:Mistuki Suzuki. 
  */
 
-(function($){
+;(function($,Window){
 	
 	$.fn.photoBox = function(){
-		new $.fn.photoBox.init($(this));
+		new $.fn.photoBox.init(this);
 		return this
 	};
 	
@@ -16,83 +16,84 @@
 		
 		var $self = this;
 		$self.body = $('<div id="photoBox">'+
-							'<div id="photoWrap">'+
-								'<div class="centering">'+
-								'<div class="pb_area close" style="background:url('+BGimg+')" ></div>'+
-								'<div id="imgBg">'+
-									'<p class="pb_button close" style="background:url('+closeimg+')"></p>'+
-									'<div id="controler">'+
-										'<div id="controlWrap" >'+
-											'<span class="button pb_prev" style="background:url('+previmg+')" ></span>'+
-											'<span class="button pb_next" style="background:url('+nextimg+')" ></span>'+
-											'<span class="pb_length"></span>'+
-					'</div></div></div></div></div>');
+							'<div id="BoxWrap">'+
+								'<div id="centering">'+
+								'<div id="displayArea" class="close"></div>'+
+									'<div id="imgWrap">'+
+										'<div id="image"></div>'+
+										'<p id="closeButton" class="close">×</p>'+
+										'<div id="controler">'+
+											'<div id="controlerWrap" >'+
+												'<div class="prev button">＜＜PREV</div>'+
+												'<div class="next button">NEXT＞＞</div>'+
+												'<div id="photoLength"></div>'+
+											'</div>\
+										</div>\
+									</div>\
+								</div>\
+							</div></div>');
 					
-		element.each(function(){
+		$(element).each(function(){
 			
 			var that = $(this);
 			
 			that.find('img').each(function(){
-		
-				var imgElm = $(element)
-				,	that = this;
+				var imgElm = $(this);
 				
-				if( imgElm.attr("src").match(/.jpg|.png/g) ){
+				if( !imgElm.attr("src").match('emoji')
+				){
 					imgElm.addClass('photobox');
 				};
 			});
 							
 			$(".photobox").click(function(){
-				
-				var self = this;
-						
+										
 				$('body').append($self.body);
-				$('#controler').hide();
+				
+				var self = this
+				,	controler = $('#controler');
+				controler.hide();
 	
-				self.allImg = $(that).find('img');
-				self.imgLength = self.allImg.length;
-				self.index = self.allImg.index(self);
-				self.imgBg = $('#imgBg');
-					
+				 self.allImg = that.find('.photobox')
+				,self.index = self.allImg.index(self)
+				,self.imgBg = $('#image')
+				,self.imgLength = self.allImg.length;
+									
 				$self.open(self);
+				
+				self.flag = true;
 	
-				if(this.imgLength > 1){
+				controler.find('.prev').on('click',function(){
 					
-					self.flag = true;
-	
-					$('.pb_prev').on('click',function(){
-						
-						if(!self.flag){return false;}
-						else{
-							$('#controler').slideUp();
-							$self.imgIndex(-1,self);
-							self.flag = false;
-							$self.getBoxSize(self);
-						}
-					});
+					if(!self.flag){return false;}
+					else{
+						controler.slideUp();
+						self.index = $self.imgIndex(-1,self);
+						self.flag = false;
+						$self.getBoxSize(self);
+					}
+				});
+				
+				controler.find('.next').on('click',function(){
 					
-					$('.pb_next').on('click',function(){
-						
-						if(!self.flag){return false;}
-						else{
-							$('#controler').slideUp();
-							$self.imgIndex(1,self);
-							self.flag = false;
-							$self.getBoxSize(self);
-						}
-					});
-				}	
+					if(!self.flag){return false;}
+					else{
+						controler.slideUp();
+						self.index = $self.imgIndex(1,self);
+						self.flag = false;
+						$self.getBoxSize(self);
+					}
+				});
 	
-				$('#photoBox').fadeIn(300).find('.close').on('click',function(){
-					$fn.close(self);
+				$('#photoBox').fadeIn(300)
+				.find('.close').on('click',function(){
+					$self.close(self);
 				});
 				return false;
 			});
-			
-			return false;
 		});
-
 	};
+	
 	$.fn.photoBox.init.prototype = {
 		
 		display : function(imgElm,self){
@@ -100,26 +101,63 @@
 			var
 			imgElm = $(imgElm),
 			bh = imgElm.height(),
-			bw = imgElm.width();
-
+			bw = imgElm.width(),
+			controler = $('#controler');
+			
 			$(self.imgBg).animate({height:bh,width:bw},function(){
 				imgElm.fadeIn(500);
-				
-				if( Number(self.imgLength) > 1 ){
-					$('#controler').slideDown();
-					$('#controlWrap .button').removeClass('nousege');
+				self.flag = true;
+				if( self.imgLength > 1 ){
+					controler.slideDown();
+					controler.find('.button').removeClass('nousege');
 					
 					if( self.index + 1 === self.imgLength ){
-						$('#controlWrap .pb_next').addClass('nousege');
+						controler.find('.next').addClass('nousege');
 					};
 					if( self.index === 0 ){
-						$('#controlWrap .pb_prev').addClass('nousege');
+						controler.find('.prev').addClass('nousege');
 					};
 				}else{
-					$('#controler').remove();
+					controler.remove();
 				};
-
-				self.flag = true;
+			});
+		},
+		open : function(self){
+			
+			var sizeh = $(Window).height()
+			,	sizew = $(Window).width()
+			,	imgElm = $(self.allImg.eq(self.index))
+			,	uri = this.urlFilter( imgElm.attr("src") )
+			,	imgH = imgElm.height()
+			,	imgW = imgElm.width()
+			,	imgElm = $('<img class="imgElm" src="'+uri+'">')
+			,	that = this;
+				
+			var length = self.index + 1;
+			
+			$('#photoLength').empty()
+			.append(length +' of ' + self.imgLength);
+			
+			if( imgH > imgW || imgH == imgW ){
+				
+				imgElm.css({maxHeight:sizeh*0.6});
+					
+			}else{
+			
+				imgElm.css({maxWidth:sizew*0.5});
+			};
+			
+			$(imgElm).hide().prependTo(self.imgBg.empty())
+			.on('load',function(){
+				that.display(this,self);
+			});
+			
+		},
+		getBoxSize : function(self){
+			var that = this;
+			$(self.imgBg).find('img').stop().fadeOut('500',function(){
+				$(this).remove();
+				that.open(self);
 			});
 		},
 		urlFilter : function(uri){
@@ -131,51 +169,13 @@
 			};
 			return uri;
 		},
-		open : function(self){
-			
-			var sizeh = $(window).height()
-			,	sizew = $(window).width()
-			,	imgElm = $(self)
-			,	uri = this.urlFilter( imgElm.attr("src") )
-			,	imgH = imgElm.height()
-			,	imgElm = $('<img class="imgElm" src="'+uri+'">')
-			,	that = this;
-				
-			var length = self.index + 1;
-			
-			$('.pb_length').empty()
-			.append('<p>'+ length +' of ' + self.imgLength + '</p>');
-			
-			if( imgH > imgW || imgH == imgW ){
-				
-				$(imgElm).css({maxHeight:sizeh*0.6});
-					
-			}else{
-			
-				$(imgElm).css({maxWidth:sizew*0.5});
-			};
-			
-			$(imgElm).hide().prependTo(self.imgBg)
-			.on('load',function(){
-				that.display(this,self);
-			});
-			
-		},
-		getBoxSize : function(self){
-			var that = this;
-			$(self.imgBg).find('img').stop().fadeOut('500',function(){
-				$(this).remove();
-				that.open(self.allImg.eq(self.index),self);
-			});
-		},
-
 		close : function(){
 			this.body.fadeOut(200,function(){
 				$(this).remove();
 			});
 		},
 		imgIndex : function(sel,self){
-				self.index = self.index + sel;
+				return self.index + sel;
 		}
-	}
-})(jQuery);
+	};
+})(jQuery,window);
