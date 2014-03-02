@@ -1,4 +1,4 @@
-#jQuery my plugins for Ameblo.
+#jQuery plugins for Ameblo.
 
 ####these scripts are plugins to use for Ameblo costomize.
 
